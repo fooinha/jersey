@@ -43,8 +43,14 @@ package org.glassfish.jersey.linking;
 import java.util.HashMap;
 import java.util.Map;
 
+import jersey.repackaged.com.google.common.collect.HashMultimap;
+
+import org.glassfish.jersey.linking.InjectLink.LinkQueryParam;
 import org.glassfish.jersey.linking.InjectLink.Style;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations
@@ -56,12 +62,18 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
     private InjectLink linkHeader;
     private Map<String, String> bindings;
+    private MultivaluedMap<String, String> queryParams;
+
 
     LinkHeaderDescriptor(InjectLink linkHeader) {
         this.linkHeader = linkHeader;
-        bindings = new HashMap<String, String>();
+        bindings = new HashMap<>();
         for (Binding binding : linkHeader.bindings()) {
             bindings.put(binding.name(), binding.value());
+        }
+        queryParams = new MultivaluedHashMap<>();
+        for (LinkQueryParam param : linkHeader.queryParams()) {
+          queryParams.add(param.name(), param.value());
         }
     }
 
@@ -83,6 +95,11 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
     public String getCondition() {
         return linkHeader.condition();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getQueryParams() {
+      return queryParams;
     }
 
 }

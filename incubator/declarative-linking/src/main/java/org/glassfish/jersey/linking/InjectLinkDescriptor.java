@@ -42,6 +42,8 @@ package org.glassfish.jersey.linking;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 /**
  * Utility for working with @Ref annotations
  *
@@ -75,4 +77,6 @@ interface InjectLinkDescriptor {
      * @return the condition
      */
     String getCondition();
+
+    MultivaluedMap<String, String> getQueryParams();
 }

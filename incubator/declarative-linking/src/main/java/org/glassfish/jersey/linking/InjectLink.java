@@ -46,6 +46,7 @@ import java.lang.annotation.Target;
 import java.net.URI;
 
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.Beta;
 
@@ -211,9 +212,36 @@ public @interface InjectLink {
         String value();
     }
 
+    LinkQueryParam[] queryParams() default {};
+    @Target({ElementType.TYPE, ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface LinkQueryParam {
+
+        /**
+         * Specifies the name of the link query parameter
+         */
+        String name();
+
+        /**
+         * Specifies the value of the link query parameter
+         */
+        String value();
+    }
+
     public static class Util {
 
+        public static Link buildLinkFromUri(URI uri, LinkQueryParam[] params, InjectLink link) {
+
+          UriBuilder builder = UriBuilder.fromUri(uri);
+          for (LinkQueryParam param: params) {
+            builder.queryParam(param.name(), param.value());
+          }
+
+          return buildLinkFromUri(builder.build(), link);
+        }
+
         public static Link buildLinkFromUri(URI uri, InjectLink link) {
+
 
             javax.ws.rs.core.Link.Builder builder = javax.ws.rs.core.Link.fromUri(uri);
             if (link.rel().length() != 0) {

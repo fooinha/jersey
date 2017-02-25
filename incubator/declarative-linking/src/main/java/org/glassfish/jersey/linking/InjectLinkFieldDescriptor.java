@@ -55,7 +55,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.jersey.linking.InjectLink.LinkQueryParam;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
 import org.glassfish.jersey.server.model.MethodList;
@@ -71,6 +74,7 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
     private InjectLink link;
     private Class<?> type;
     private Map<String, String> bindings;
+    private MultivaluedMap<String, String> queryParams;
 
     /**
      * TODO javadoc.
@@ -82,6 +86,10 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
         bindings = new HashMap<>();
         for (Binding binding : l.bindings()) {
             bindings.put(binding.name(), binding.value());
+        }
+        queryParams = new MultivaluedHashMap<>();
+        for (LinkQueryParam param: l.queryParams()) {
+          queryParams.add(param.name(), param.value());
         }
     }
 
@@ -246,5 +254,10 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
      */
     public String getCondition() {
         return link.condition();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getQueryParams() {
+      return queryParams;
     }
 }

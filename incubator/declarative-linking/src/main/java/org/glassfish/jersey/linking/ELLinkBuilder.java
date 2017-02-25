@@ -44,7 +44,9 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
@@ -109,6 +111,18 @@ final class ELLinkBuilder {
         UriTemplateParser parser = new UriTemplateParser(template);
         List<String> parameterNames = parser.getNames();
         Map<String, Object> valueMap = getParameterValues(parameterNames, link, context, uriInfo);
+
+        // adds query parameters.
+        MultivaluedMap<String, String> query = link.getQueryParams();
+        for (Entry<String, List<String>> entry : query.entrySet()) {
+          //process each value from query parameter and get expression's result.
+          for (String val: entry.getValue()) {
+            ValueExpression valExpr =
+                expressionFactory.createValueExpression(context, val, String.class);
+            ub.queryParam(entry.getKey(), valExpr.getValue(context).toString());
+          }
+        }
+
         return ub.buildFromMap(valueMap);
     }
 
