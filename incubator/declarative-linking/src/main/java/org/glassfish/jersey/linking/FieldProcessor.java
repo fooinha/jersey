@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.linking;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
@@ -48,12 +49,15 @@ import java.util.logging.Logger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.RuntimeResource;
 
 /**
  * Utility class that can inject links into {@link org.glassfish.jersey.linking.InjectLink} annotated fields in
@@ -163,14 +167,19 @@ class FieldProcessor<T> {
 
     }
 
+
+
     private boolean fieldSuitableForIntrospection(FieldDescriptor member) {
+
         return member.field == null
                 || (!member.field.isSynthetic()
                     && !Modifier.isTransient(member.field.getModifiers())
                     && !member.field.getType().isPrimitive()
                     && member.field.getType() != String.class
                     && !member.field.isAnnotationPresent(InjectLinkNoFollow.class)
-                    && !member.field.isAnnotationPresent(XmlTransient.class));
+                    && !member.field.isAnnotationPresent(XmlTransient.class)
+                    && !member.field.getType().isInterface()
+                    );
     }
 
     private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo,

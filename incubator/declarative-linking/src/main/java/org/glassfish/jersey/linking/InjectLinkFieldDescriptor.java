@@ -44,9 +44,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,7 +60,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.jersey.linking.InjectLink.LinkQueryParam;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
 import org.glassfish.jersey.server.model.MethodList;
@@ -71,6 +79,9 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
     private InjectLink link;
     private Class<?> type;
     private Map<String, String> bindings;
+    private MultivaluedMap<String, String> queryParams;
+    private boolean copyFromRequestQueryParams = false;
+    private Set<String> excludeFromRequestQueryParams = null;
 
     /**
      * TODO javadoc.
@@ -83,6 +94,16 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
         for (Binding binding : l.bindings()) {
             bindings.put(binding.name(), binding.value());
         }
+        queryParams = new MultivaluedHashMap<>();
+        for (LinkQueryParam param: l.queryParams()) {
+          queryParams.add(param.name(), param.value());
+        }
+        copyFromRequestQueryParams = l.copyRequestQueryParams();
+        if (copyFromRequestQueryParams) {
+          excludeFromRequestQueryParams =
+              Collections.unmodifiableSet(
+                  new HashSet<>(Arrays.asList(l.excludeFromRequestQueryParams())));
+        }
     }
 
     /**
@@ -93,13 +114,13 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
         try {
 
             Object value;
-            if (URI.class.equals(type)) {
+            if (Objects.equals(URI.class, type)) {
                 value = uri;
             } else if (Link.class.isAssignableFrom(type)) {
 
                 // Make a link with the correct bindings
                 value = getLink(uri);
-            } else if (String.class.equals(type)) {
+            } else if (Objects.equals(String.class, type)) {
                 value = uri.toString();
             } else {
                 throw new IllegalArgumentException("Field type " + type + " not one of supported String,URI and Link");
@@ -246,5 +267,23 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
      */
     public String getCondition() {
         return link.condition();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getQueryParams() {
+      return queryParams;
+    }
+
+    @Override
+    public boolean copyFromRequestParams() {
+      return copyFromRequestQueryParams;
+    }
+
+    @Override
+    public Set<String> excludeFromRequestParams() {
+      if (!copyFromRequestQueryParams) {
+        return null;
+      }
+      return excludeFromRequestQueryParams;
     }
 }

@@ -46,6 +46,8 @@ import java.lang.annotation.Target;
 import java.net.URI;
 
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.Beta;
 
@@ -210,6 +212,37 @@ public @interface InjectLink {
          */
         String value();
     }
+
+    /**
+     * Specifies name-value pairs for Link's query part.
+     */
+    LinkQueryParam[] queryParams() default {};
+
+    @Target({ElementType.TYPE, ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface LinkQueryParam {
+
+        /**
+         * Specifies the name of the link query parameter.
+         */
+        String name();
+
+        /**
+         * Specifies the value of the link query parameter.
+         */
+        String value();
+    }
+
+    /**
+     * Specifies that request query params must be include in Link.
+     */
+    boolean copyRequestQueryParams() default false;
+
+    /**
+     * If request query params are copied to Link, then exclude query parameters from this list.
+     */
+    String[] excludeFromRequestQueryParams() default {};
+
 
     public static class Util {
 
